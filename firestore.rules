@@ -1,0 +1,127 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===== FUNÇÕES AUXILIARES =====
+    
+    // Verifica se o usuário está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Verifica se é o próprio usuário
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    // Verifica se é o Super Admin (email específico)
+    function isSuperAdmin() {
+      return isAuthenticated() && request.auth.token.email == 'alexcastrocutrim@gmail.com';
+    }
+    
+    // Obtém os dados do membro atual
+    function getMemberData() {
+      return get(/databases/$(database)/documents/members/$(request.auth.uid)).data;
+    }
+    
+    // Verifica se o usuário tem cargo de liderança
+    function isLeader() {
+      return isAuthenticated() && 
+             getMemberData().role in ['Gerente', 'Dono', 'Comandante', 'Admin'];
+    }
+    
+    // Verifica se o status é válido
+    function isValidStatus(status) {
+      return status in ['online', 'offline', 'ausente'];
+    }
+    
+    // Verifica se o role é válido
+    function isValidRole(role) {
+      return role in ['Vapor', 'Soldado', 'Gerente', 'Dono', 'Comandante', 'Admin'];
+    }
+    
+    
+    // ===== COLEÇÃO: MEMBERS =====
+    match /members/{userId} {
+      
+      // LEITURA: Qualquer membro autenticado pode ver outros membros
+      allow read: if isAuthenticated();
+      
+      // CRIAÇÃO: Apenas durante o registro (via Firebase Auth)
+      // Os campos obrigatórios devem estar presentes
+      allow create: if isAuthenticated() &&
+                       isOwner(userId) &&
+                       request.resource.data.keys().hasAll(['gameId', 'name', 'email', 'role', 'status']) &&
+                       request.resource.data.gameId is number &&
+                       request.resource.data.name is string &&
+                       request.resource.data.email is string &&
+                       isValidRole(request.resource.data.role) &&
+                       isValidStatus(request.resource.data.status);
+      
+      // ATUALIZAÇÃO: Usuário pode atualizar apenas seu próprio status
+      // Líderes podem atualizar role, financial, actions, routes de outros membros
+      // Super Admin pode modificar qualquer coisa
+      allow update: if isAuthenticated() && (
+        // Próprio usuário atualizando apenas status
+        (isOwner(userId) && 
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']) &&
+         isValidStatus(request.resource.data.status))
+        ||
+        // Líderes podem atualizar dados financeiros e role de outros
+        (isLeader() && 
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role', 'financial', 'actions', 'routes', 'status']) &&
+         (request.resource.data.role == resource.data.role || isValidRole(request.resource.data.role)))
+        ||
+        // Super Admin pode modificar qualquer campo
+        isSuperAdmin()
+      );
+      
+      // EXCLUSÃO: Apenas líderes e Super Admin podem deletar membros
+      allow delete: if isLeader() || isSuperAdmin();
+    }
+    
+    
+    // ===== COLEÇÃO: CONFIG =====
+    match /config/{configId} {
+      
+      // LEITURA: Todos os membros autenticados podem ler configurações
+      allow read: if isAuthenticated();
+      
+      // ESCRITA: Apenas líderes e Super Admin podem modificar configurações
+      // Validações adicionais para documento 'financial'
+      allow write: if (isLeader() || isSuperAdmin()) && (
+        // Se for o documento financial, validar estrutura
+        configId != 'financial' ||
+        (request.resource.data.keys().hasAll(['money', 'transactions', 'actions', 'salesLog', 'routesLog']) &&
+         request.resource.data.money is number &&
+         request.resource.data.money >= 0 &&
+         request.resource.data.transactions is list &&
+         request.resource.data.actions is list &&
+         request.resource.data.salesLog is list &&
+         request.resource.data.routesLog is list)
+      );
+    }
+    
+    
+    // ===== COLEÇÃO: LOGS (Opcional - para auditoria futura) =====
+    match /logs/{logId} {
+      // LEITURA: Apenas líderes
+      allow read: if isLeader();
+      
+      // CRIAÇÃO: Qualquer membro autenticado pode criar logs
+      allow create: if isAuthenticated() &&
+                       request.resource.data.userId == request.auth.uid &&
+                       request.resource.data.timestamp == request.time;
+      
+      // Logs não podem ser modificados ou deletados (imutáveis)
+      allow update, delete: if false;
+    }
+    
+    
+    // ===== BLOQUEIO GERAL =====
+    // Qualquer outra coleção não especificada é bloqueada
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
