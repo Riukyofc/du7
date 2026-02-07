@@ -1,0 +1,21 @@
+==========================================
+🆘 COMANDO DE EMERGÊNCIA - LIMPAR FARM
+==========================================
+
+PASSO A PASSO:
+
+1. Abra o painel no navegador: http://localhost:8080
+2. Aperte F12 (abrir DevTools)
+3. Vá na aba "Console"
+4. COPIE e COLE este comando (tudo de uma vez):
+
+state.routesLog = []; state.members.forEach(m => m.routes = 0); saveFinancialData().then(() => { alert('✅ LIMPO! Recarregue a página.'); });
+
+5. Aperte ENTER
+6. Aguarde aparecer o alerta: "✅ LIMPO! Recarregue a página."
+7. Recarregue a página (Ctrl + R)
+8. Agora teste registrar um farm novo
+
+==========================================
+
+Se ainda não funcionar, me avise!

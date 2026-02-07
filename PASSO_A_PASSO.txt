@@ -1,0 +1,82 @@
+# =============================================================================
+# GUIA PASSO-A-PASSO PARA INTEGRAÇÃO MANUAL - SUPER FÁCIL!
+# =============================================================================
+
+ABRA O ARQUIVO: app.js
+
+# =============================================================================
+# PASSO 1: ADICIONAR AO STATE (Linha ~35)
+# =============================================================================
+
+Procure por esta linha:
+    farmMaterials: ['Metal', 'Cobre', 'RDX', 'Plaster', 'Ferro', 'Alumínio', 'Pólvora', 'Tecido', 'Plástico', 'Ketamina']
+};
+
+SUBSTITUA POR:
+    farmMaterials: ['Metal', 'Cobre', 'RDX', 'Plaster', 'Ferro', 'Alumínio', 'Pólvora', 'Tecido', 'Plástico', 'Ketamina'],
+    roles: [],
+    communications: [],
+    goals: []
+};
+
+(ATENÇÃO: Adicione VÍRGULA após farmMaterials e as 3 novas linhas ANTES de fechar com };)
+
+# =============================================================================
+# PASSO 2: ADICIONAR AO navItems (Linha ~47)
+# =============================================================================
+
+Procure por:
+    { id: 'members', label: 'Membros', icon: 'users' },
+    { id: 'inventory', label: 'Estoque', icon: 'package' },
+
+MUDE PARA:
+    { id: 'members', label: 'Membros', icon: 'users' },
+    { id: 'roles', label: 'Cargos', icon: 'shield' },
+    { id: 'communications', label: 'Comunicação', icon: 'megaphone' },
+    { id: 'goals', label: 'Metas', icon: 'target' },
+    { id: 'inventory', label: 'Estoque', icon: 'package' },
+
+(Adicione as 3 novas linhas ENTRE members e inventory)
+
+# =============================================================================
+# PASSO 3: ADICIONAR CASES NO SWITCH (Linha ~200+)
+# =============================================================================
+
+Procure pela função que tem vários "case":
+    case 'logs':
+        content.innerHTML = renderLogs();
+        pageTitle.textContent = 'Logs do Sistema';
+        break;
+
+LOGO APÓS esse case 'logs', ADICIONE:
+
+    case 'roles':
+        content.innerHTML = renderRoles();
+        pageTitle.textContent = 'Cargos & Permissões';
+        break;
+    case 'communications':
+        content.innerHTML = renderCommunications();
+        pageTitle.textContent = 'Comunicação';
+        break;
+    case 'goals':
+        content.innerHTML = renderGoals();
+        pageTitle.textContent = 'Metas';
+        break;
+
+# =============================================================================
+# PRONTO! SALVE O ARQUIVO (Ctrl+S)
+# =============================================================================
+
+Agora:
+1. Recarregue a página no navegador (F5)
+2. Faça login
+3. Você verá 3 NOVAS ABAS na sidebar:
+   🛡️ Cargos
+   📢 Comunicação
+   🎯 Metas
+
+CLIQUE em cada uma para testar! Tudo já está funcionando! 🎉
+
+# =============================================================================
+# DICA: Use Ctrl+F para procurar as linhas exatas mencionadas acima!
+# =============================================================================

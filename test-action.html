@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Teste de Ações</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+</head>
+
+<body>
+    <h1>Teste de Ações do Firebase</h1>
+    <div id="result"></div>
+
+    <script>
+        // Configuração do Firebase (mesma do app.js)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAT7ZcwzRxcFp_3k_I8qPuM3jSsDkI6VpE",
+            authDomain: "painel-rocinha.firebaseapp.com",
+            projectId: "painel-rocinha",
+            storageBucket: "painel-rocinha.firebasestorage.app",
+            messagingSenderId: "629063614758",
+            appId: "1:629063614758:web:5c4dab89a64bf89cbd9b08"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Ler dados do Firebase
+        async function testRead() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>Carregando...</p>';
+
+            try {
+                const doc = await db.collection('config').doc('financial').get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    const actions = data.actions || [];
+
+                    resultDiv.innerHTML = `
+                        <h2>Resultado:</h2>
+                        <p><strong>Total de ações no Firebase:</strong> ${actions.length}</p>
+                        <h3>Ações registradas:</h3>
+                        <pre>${JSON.stringify(actions, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = '<p>Documento "financial" não existe!</p>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: red;">Erro: ${error.message}</p>`;
+                console.error(error);
+            }
+        }
+
+        // Executar ao carregar
+        testRead();
+    </script>
+</body>
+
+</html>

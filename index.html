@@ -1,0 +1,366 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel 4K</title>
+
+    <!-- Firebase SDKs (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Inter:wght@400;600;900&display=swap"
+        rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        rocinha: {
+                            purple: '#a855f7',
+                            dark: '#1e1b4b',
+                            accent: '#d8b4fe',
+                        }
+                    },
+                    animation: {
+                        'float': 'float 4s ease-in-out infinite',
+                        'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'slideUp': 'slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+                        'scaleIn': 'scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        slideUp: {
+                            'from': { transform: 'translateY(30px) scale(0.9)', opacity: '0' },
+                            'to': { transform: 'translateY(0) scale(1)', opacity: '1' },
+                        },
+                        scaleIn: {
+                            'from': { transform: 'scale(0.8)', opacity: '0' },
+                            'to': { transform: 'scale(1)', opacity: '1' },
+                        },
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #050505;
+            color: white;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.5) 50%), linear-gradient(90deg, rgba(168, 85, 247, 0.03), rgba(0, 0, 0, 0.02), rgba(168, 85, 247, 0.03));
+            z-index: 50;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        .glitch-wrapper {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            height: 3rem;
+            align-items: center;
+        }
+
+        .glitch {
+            position: relative;
+            color: white;
+            font-weight: 900;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: #050505;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background-color: #a855f7;
+            border-radius: 0px;
+        }
+
+        .card-insane:hover {
+            border-color: #a855f7;
+            box-shadow: 0 0 25px rgba(168, 85, 247, 0.4), inset 0 0 10px rgba(216, 180, 254, 0.1);
+            transform: translateY(-5px) scale(1.01);
+        }
+
+        .cyber-checkbox:checked {
+            background-color: #a855f7;
+            border-color: #d8b4fe;
+        }
+    </style>
+</head>
+
+<body class="selection:bg-purple-600 selection:text-white font-sans h-screen overflow-hidden relative">
+
+    <!-- LOADING SCREEN -->
+    <div id="loading-screen" class="fixed inset-0 z-[70] bg-black flex items-center justify-center">
+        <div class="text-center">
+            <div class="w-16 h-16 border-4 border-purple-600 border-t-white rounded-full animate-spin mx-auto mb-4">
+            </div>
+            <p class="text-zinc-500 text-xs uppercase tracking-widest">Carregando...</p>
+        </div>
+    </div>
+
+    <!-- TELA DE LOGIN E REGISTRO -->
+    <div id="login-screen"
+        class="hidden fixed inset-0 z-[60] bg-black flex items-center justify-center bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
+        <div class="absolute inset-0 bg-gradient-to-br from-purple-900/20 to-black pointer-events-none"></div>
+        <div
+            class="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-purple-600 to-transparent shadow-[0_0_20px_#a855f7]">
+        </div>
+        <div
+            class="absolute bottom-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-white to-transparent shadow-[0_0_20px_#ffffff]">
+        </div>
+
+        <div class="w-full max-w-md p-8 relative z-10 animate-scaleIn">
+            <div class="flex justify-center mb-8 relative">
+                <div
+                    class="w-40 h-40 rounded-full border-4 border-purple-600 flex items-center justify-center shadow-[0_0_50px_rgba(168,85,247,0.6)] bg-black animate-float overflow-hidden relative">
+                    <img src="logo-4k.png" alt="4K Logo" class="w-full h-full object-cover">
+                </div>
+            </div>
+
+            <div
+                class="bg-black/80 border border-zinc-800 rounded-2xl p-8 backdrop-blur-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] relative group hover:border-purple-600/50 transition-colors duration-500 overflow-hidden">
+                <div class="absolute -top-1 -left-1 w-3 h-3 border-t-2 border-l-2 border-purple-500"></div>
+                <div class="absolute -bottom-1 -right-1 w-3 h-3 border-b-2 border-r-2 border-white"></div>
+
+                <div class="text-center mb-6">
+                    <h1 class="text-3xl font-black text-white italic tracking-tighter glitch mb-1">COMANDO <span
+                            class="text-purple-500">4K</span></h1>
+                    <p class="text-[10px] text-zinc-500 uppercase tracking-[0.3em] font-bold" id="auth-subtitle">Acesso
+                        Restrito</p>
+                </div>
+
+                <!-- LOGIN FORM -->
+                <form id="login-form" onsubmit="handleLogin(event)" class="space-y-5">
+                    <div>
+                        <label
+                            class="block text-xs text-purple-500 font-bold uppercase tracking-widest mb-2">Email</label>
+                        <div class="relative group">
+                            <span
+                                class="absolute left-4 top-3.5 text-zinc-600 group-focus-within:text-white transition-colors"><i
+                                    data-lucide="mail" class="w-5 h-5"></i></span>
+                            <input type="email" id="login-email"
+                                class="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg py-3 pl-12 pr-4 text-white focus:border-purple-600 focus:shadow-[0_0_15px_rgba(168,85,247,0.3)] outline-none transition-all placeholder-zinc-700"
+                                placeholder="seu@email.com">
+                        </div>
+                    </div>
+                    <div>
+                        <label
+                            class="block text-xs text-purple-500 font-bold uppercase tracking-widest mb-2">Senha</label>
+                        <div class="relative group">
+                            <span
+                                class="absolute left-4 top-3.5 text-zinc-600 group-focus-within:text-white transition-colors"><i
+                                    data-lucide="lock" class="w-5 h-5"></i></span>
+                            <input type="password" id="login-password"
+                                class="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg py-3 pl-12 pr-4 text-white focus:border-purple-600 focus:shadow-[0_0_15px_rgba(168,85,247,0.3)] outline-none transition-all placeholder-zinc-700"
+                                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢">
+                        </div>
+                    </div>
+
+                    <button type="submit"
+                        class="w-full bg-purple-600 hover:bg-purple-500 text-white font-black py-4 rounded-lg shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:shadow-[0_0_30px_rgba(168,85,247,0.6)] transition-all transform active:scale-95 uppercase tracking-widest text-sm flex items-center justify-center group">
+                        <span class="mr-2">Acessar Sistema</span>
+                        <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+                    </button>
+
+                    <div class="text-center mt-4">
+                        <p class="text-xs text-zinc-500">NÃ£o tem conta? <button type="button"
+                                onclick="toggleAuthMode('register')"
+                                class="text-purple-400 hover:underline font-bold">REGISTRAR</button></p>
+                    </div>
+                </form>
+
+                <!-- REGISTER FORM -->
+                <form id="register-form" onsubmit="handleRegister(event)" class="space-y-4 hidden">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-purple-500 font-bold uppercase tracking-widest mb-1">ID
+                                (Jogo)</label>
+                            <input type="number" id="reg-id" required
+                                class="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg py-2 px-3 text-white focus:border-purple-400 outline-none text-sm font-mono placeholder-zinc-700"
+                                placeholder="123">
+                        </div>
+                        <div>
+                            <label
+                                class="block text-xs text-purple-500 font-bold uppercase tracking-widest mb-1">Nome</label>
+                            <input type="text" id="reg-name" required
+                                class="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg py-2 px-3 text-white focus:border-purple-400 outline-none text-sm placeholder-zinc-700"
+                                placeholder="Seu Vulgo">
+                        </div>
+                    </div>
+                    <div>
+                        <label
+                            class="block text-xs text-purple-500 font-bold uppercase tracking-widest mb-1">Email</label>
+                        <input type="email" id="reg-email" required
+                            class="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg py-2 px-3 text-white focus:border-purple-400 outline-none text-sm placeholder-zinc-700"
+                            placeholder="email@exemplo.com">
+                    </div>
+                    <div>
+                        <label
+                            class="block text-xs text-purple-500 font-bold uppercase tracking-widest mb-1">Senha</label>
+                        <input type="password" id="reg-pass" required
+                            class="w-full bg-zinc-950/50 border border-zinc-800 rounded-lg py-2 px-3 text-white focus:border-purple-400 outline-none text-sm placeholder-zinc-700"
+                            placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢">
+                    </div>
+
+                    <button type="submit"
+                        class="w-full bg-white hover:bg-zinc-200 text-black font-black py-4 rounded-lg shadow-[0_0_20px_rgba(255,255,255,0.4)] transition-all transform active:scale-95 uppercase tracking-widest text-sm flex items-center justify-center group">
+                        <span class="mr-2">Criar Conta</span>
+                        <i data-lucide="user-plus" class="w-4 h-4 group-hover:scale-110 transition-transform"></i>
+                    </button>
+
+                    <div class="text-center mt-4">
+                        <p class="text-xs text-zinc-500">JÃ¡ tem acesso? <button type="button"
+                                onclick="toggleAuthMode('login')"
+                                class="text-purple-500 hover:underline font-bold">ENTRAR</button></p>
+                    </div>
+                </form>
+
+                <div id="auth-msg" class="hidden mt-4 p-3 rounded text-xs text-center font-bold"></div>
+            </div>
+
+            <p class="text-center text-zinc-600 text-[10px] mt-6 uppercase tracking-widest">Painel de Controle Privado
+                v3.0</p>
+        </div>
+    </div>
+
+    <!-- APLICAÃ‡ÃƒO PRINCIPAL -->
+    <div id="app-root" class="hidden flex h-screen w-full">
+
+        <div id="sidebarOverlay" class="fixed inset-0 bg-black/90 z-20 hidden md:hidden backdrop-blur-sm"
+            onclick="toggleSidebar()"></div>
+
+        <!-- Sidebar -->
+        <aside id="sidebar"
+            class="fixed md:static inset-y-0 left-0 z-30 w-72 bg-black border-r border-zinc-900 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col shadow-[5px_0_30px_rgba(0,0,0,0.5)]">
+            <div class="p-8 border-b border-zinc-900 flex flex-col items-center relative overflow-hidden group">
+                <div
+                    class="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-purple-600 to-transparent opacity-70">
+                </div>
+
+                <div
+                    class="w-28 h-28 bg-black rounded-full border-2 border-purple-500 flex items-center justify-center mb-6 shadow-[0_0_35px_rgba(168,85,247,0.5)] z-10 animate-float overflow-hidden relative">
+                    <img src="logo-4k.png" alt="4K Logo" class="w-full h-full object-cover">
+                </div>
+
+                <div class="glitch-wrapper mb-2">
+                    <h1 id="sidebarTitle"
+                        class="text-2xl font-black text-white tracking-tighter uppercase italic glitch">COMANDO <span
+                            class="text-purple-500">4K</span></h1>
+                </div>
+                <p class="text-[10px] text-zinc-500 uppercase tracking-[0.3em] font-bold">Painel de Controle</p>
+            </div>
+
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto" id="navLinks"></nav>
+
+            <!-- User Status & Logout -->
+            <div class="p-4 border-t border-zinc-900 space-y-3">
+                <div id="currentUserInfo"
+                    class="bg-gradient-to-r from-zinc-900 to-black rounded border border-zinc-800 p-3 flex items-center group hover:border-purple-500/50 transition-colors cursor-default">
+                    <div
+                        class="w-10 h-10 rounded bg-purple-900/20 text-purple-400 flex items-center justify-center font-bold mr-3 border border-purple-500/30">
+                        ?</div>
+                    <div class="overflow-hidden">
+                        <p class="text-sm font-bold text-white truncate font-mono">Carregando...</p>
+                        <p class="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Membro</p>
+                    </div>
+                </div>
+
+                <button onclick="logout()"
+                    class="w-full flex items-center justify-center p-2 rounded text-xs font-bold uppercase tracking-widest text-red-500 hover:bg-red-900/20 border border-transparent hover:border-red-500/30 transition-all">
+                    <i data-lucide="log-out" class="w-4 h-4 mr-2"></i> Sair
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col h-full relative overflow-hidden bg-black">
+            <div
+                class="absolute inset-0 bg-[linear-gradient(rgba(18,18,18,0.5)_1px,transparent_1px),linear-gradient(90deg,rgba(18,18,18,0.5)_1px,transparent_1px)] bg-[size:40px_40px] opacity-20 pointer-events-none">
+            </div>
+            <div
+                class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent pointer-events-none">
+            </div>
+
+            <header
+                class="md:hidden h-16 border-b border-zinc-900 flex items-center justify-between px-4 bg-black/80 backdrop-blur">
+                <button onclick="toggleSidebar()" class="text-white hover:text-purple-400"><i
+                        data-lucide="menu"></i></button>
+                <span class="font-black text-purple-500 tracking-widest text-lg">ROCINHA</span>
+                <div class="w-6"></div>
+            </header>
+
+            <div class="flex-1 overflow-y-auto p-4 md:p-8 scrollbar-thin relative z-10" id="mainScroll">
+                <div class="max-w-7xl mx-auto pb-10">
+                    <header class="mb-10 hidden md:block">
+                        <h2 id="pageTitle"
+                            class="text-4xl font-black text-white uppercase tracking-tighter italic animate-slideUp drop-shadow-[0_0_10px_rgba(168,85,247,0.5)]">
+                            Dashboard</h2>
+                        <div class="h-1.5 w-24 bg-purple-600 mt-2 rounded shadow-[0_0_15px_#a855f7] animate-slideUp"
+                            style="animation-delay: 100ms;"></div>
+                    </header>
+                    <div id="appContent"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals will be added via JavaScript -->
+    <div id="modals-container"></div>
+
+    <script src="app.js"></script>
+    <script src="components.js"></script>
+    <script src="features.js"></script>
+    <script src="sales-fin.js"></script>
+    <script src="sales-extensions.js"></script>
+    <script src="logs.js"></script>
+
+    <script src="farm.js"></script>
+    <script src="roles.js"></script>
+    <script src="communications.js"></script>
+    <script src="goals.js"></script>
+    <script src="inventory-override.js"></script>
+    <script src="inventory-delete.js"></script>
+    <script src="resumo.js"></script>
+    <script src="cleanup-farm.js"></script>
+</body>
+
+</html>

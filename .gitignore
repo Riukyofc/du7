@@ -1,0 +1,30 @@
+# Node modules
+node_modules/
+
+# Firebase config com credenciais (NUNCA commitar!)
+firebase-config.js
+
+# Backups
+*.backup
+app.js.backup
+
+# Arquivos temporários
+*.tmp
+*.log
+
+# Scripts de integração (já foram executados)
+integrate.js
+fix-html.js
+integrate_systems.ps1
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.local
